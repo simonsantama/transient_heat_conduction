@@ -127,3 +127,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# don't track the pdf book
+./transient_heat_conduction/documents/
