@@ -14,7 +14,10 @@ class TestInputValidation(unittest.TestCase):
         ("properties_type", "constant"), ("boundcond_surface", "robin"),
         ("surface_losses_type", "non-linear"), ("absorptivity", 0.9),
         ("emissivity", 0.9), ("h_convective", 10),
-        ("boundcond_back", "insulated"), ("ihf_type", "constant")]})
+        ("boundcond_back", "insulated"), ("ihf_type", "constant"),
+        ("conductivity_subs", 0), ("material_type", "inert"),
+        ("pre_exp_factor", 1), ("activation_energy", 1),
+        ("heat_reaction", 1), ("reaction_order", 1)]})
     for property_name in ["conductivity_coeff", "density_coeff",
                           "heat_capacity_coeff"]:
         problem_description_test[property_name] = [1, None]
@@ -186,6 +189,36 @@ class TestInputValidation(unittest.TestCase):
             main_solver(self.problem_description_test)
         self.assertEqual(cm.exception.code, 1)
 
+        self.problem_description_test["boundcond_back"] = "conductive_losses"
+        self.problem_description_test["conductivity_subs"] = None,
+        with self.assertRaises(SystemExit) as cm:
+            main_solver(self.problem_description_test)
+        self.assertEqual(cm.exception.code, 1)
+        self.problem_description_test["boundcond_back"] = "insulated"
+
+    def test_n_pyrolysis(self):
+        """Tests that if the solid is considered as reactive, the parameters
+        are correctly defined"""
+        self.problem_description_test["material_type"] = None
+        with self.assertRaises(SystemExit) as cm:
+            main_solver(self.problem_description_test)
+        self.assertEqual(cm.exception.code, 1)
+
+        self.problem_description_test["material_type"] = "reactive"
+        for property_name in ["pre_exp_factor", "activation_energy",
+                              "heat_reaction", "reaction_order"]:
+            self.problem_description_test[property_name] = None
+            with self.assertRaises(SystemExit) as cm:
+                main_solver(self.problem_description_test)
+            self.assertEqual(cm.exception.code, 1)
+            self.problem_description_test[property_name] = 1
+
+    def test_o_indepth_absorp(self):
+        """Tests the indepth absorptivity value needs to be a float"""
+        self.problem_description_test["in-depth_absorptivity"] = None
+        with self.assertRaises(SystemExit) as cm:
+            main_solver(self.problem_description_test)
+        self.assertEqual(cm.exception.code, 1)
 
 if __name__ == '__main__':
     unittest.main()
