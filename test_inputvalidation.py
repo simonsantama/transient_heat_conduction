@@ -5,30 +5,39 @@ import numpy as np
 
 class TestInputValidation(unittest.TestCase):
 
-    # create problem description dictionary
-    list_keys = ["depth", "x_divisions", "time_total", "temperature_ambient",
-                 "temperature_initial"]
-    problem_description_test = {key: 10 for key in list_keys}
-    problem_description_test.update({entry[0]: entry[1] for entry in [
-        ("material", "pmma"), ("problem_type", "direct"),
-        ("properties_type", "constant"), ("boundcond_surface", "robin"),
-        ("surface_losses_type", "non-linear"), ("absorptivity", 0.9),
-        ("emissivity", 0.9), ("h_convective", 10),
-        ("boundcond_back", "insulated"), ("ihf_type", "constant"),
-        ("conductivity_subs", 0), ("material_type", "inert"),
-        ("pre_exp_factor", 1), ("activation_energy", 1),
-        ("heat_reaction", 1), ("reaction_order", 1)]})
-    for property_name in ["conductivity_coeff", "density_coeff",
-                          "heat_capacity_coeff"]:
-        problem_description_test[property_name] = [1, None]
+    def setUp(self):
+        """creates problem description dictionary needed to create the
+        sample class when main solver is called"""
+        self.list_keys = ["depth", "x_divisions", "time_total",
+                          "temperature_ambient",
+                          "temperature_initial"]
+        self.problem_description_test = {key: 10 for key in self.list_keys}
+        self.problem_description_test.update({entry[0]: entry[1] for entry in [
+            ("material", "pmma"), ("problem_type", "direct"),
+            ("properties_type", "constant"), ("boundcond_surface", "robin"),
+            ("surface_losses_type", "non-linear"), ("absorptivity", 0.9),
+            ("emissivity", 0.9), ("h_convective", 10),
+            ("boundcond_back", "insulated"), ("ihf_type", "constant"),
+            ("conductivity_subs", 0), ("material_type", "inert"),
+            ("pre_exp_factor", 1), ("activation_energy", 1),
+            ("heat_reaction", 1), ("reaction_order", 1),
+            ("ihf_coefficients", 4000)]})
+        for property_name in ["conductivity_coeff", "density_coeff",
+                              "heat_capacity_coeff"]:
+            self.problem_description_test[property_name] = [1, None]
+
+    def tearDown(self):
+        pass
 
     def test_a_materialname(self):
         """Tests that the material name is not None"""
         self.problem_description_test["material"] = None
+        self.assertRaises(SystemExit, main_solver,
+                          self.problem_description_test)
         with self.assertRaises(SystemExit) as cm:
             main_solver(self.problem_description_test)
         self.assertEqual(cm.exception.code, 1)
-        self.problem_description_test["material"] = 0
+        self.problem_description_test["material"] = "pmma"
 
     def test_b_problemtype(self):
         """Tests that incorrect problem types are not allowed"""
